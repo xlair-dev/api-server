@@ -17,8 +17,11 @@ services:
     image: rust:1.90
     container_name: xlair-dev-migrator
     working_dir: /workspace
+    entrypoint: ["cargo", "run", "-p", "migration", "--"]
     volumes:
       - .:/workspace
+      - cargo-home:/usr/local/cargo
+      - rustup-home:/usr/local/rustup
       - cargo-target:/workspace/target
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -27,8 +30,10 @@ services:
         condition: service_healthy
     profiles:
       - migration
-    command: cargo run -p migration -- up
+    command: ["up"]
     restart: "no"
 
 volumes:
+  cargo-home:
+  rustup-home:
   cargo-target:
