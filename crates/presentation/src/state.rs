@@ -13,12 +13,25 @@ pub type RepositoriesImpl = domain::repository::MockRepositories;
 pub struct State {
     pub usecases: Arc<usecase::Usecases<RepositoriesImpl>>,
     pub config: Config,
+    pub jacket_storage: Option<Arc<infrastructure::jacket::JacketStorage>>,
 }
 
 impl State {
     pub fn new(config: Config, repositories: RepositoriesImpl) -> Self {
         let repositories = Arc::new(repositories);
         let usecases = Arc::new(usecase::Usecases::new(repositories));
-        Self { usecases, config }
+        Self {
+            usecases,
+            config,
+            jacket_storage: None,
+        }
+    }
+
+    pub fn with_jacket_storage(
+        mut self,
+        jacket_storage: infrastructure::jacket::JacketStorage,
+    ) -> Self {
+        self.jacket_storage = Some(Arc::new(jacket_storage));
+        self
     }
 }
