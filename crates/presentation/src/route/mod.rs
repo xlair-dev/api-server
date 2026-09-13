@@ -53,6 +53,10 @@ pub fn create_app(state: State, authenticator: Option<Authenticator>) -> Router 
             get(admin::handle_get_music).post(admin::handle_update_music),
         )
         .route("/db/synchronize", post(admin::handle_db_synchronization));
+    let admin_routes = admin_routes.route(
+        "/jackets/upload-url",
+        post(admin::handle_create_jacket_upload_url),
+    );
 
     let private_routes = Router::new()
         .nest("/users", users)

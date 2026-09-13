@@ -299,6 +299,35 @@ paths:
           description: Not found - Music not found
         "500":
           description: Internal server error
+  /admin/jackets/upload-url:
+    post:
+      tags:
+        - admin
+      summary: 楽曲ジャケットのアップロード URL を発行
+      security:
+        - userAuth: []
+      parameters:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/jacketUploadRequest"
+      responses:
+        "200":
+          description: R2へのアップロード URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/jacketUploadResponse"
+        "400":
+          description: Bad request - Invalid music ID or content type
+        "401":
+          description: Unauthorized - Invalid access token
+        "403":
+          description: Forbidden - The authenticated user is not an administrator
+        "500":
+          description: Internal server error
   /users/{userId}/credits/increment:
     post:
       tags:
@@ -740,6 +769,36 @@ components:
         - clearType
         - playCount
         - updatedAt
+    jacketUploadRequest:
+      type: object
+      properties:
+        musicId:
+          type: string
+          format: uuid
+          description: 編集対象の楽曲 ID。新規登録時は省略する
+        contentType:
+          type: string
+          enum:
+            - image/jpeg
+            - image/png
+            - image/webp
+          description: アップロードする画像の MIME タイプ
+      required:
+        - contentType
+    jacketUploadResponse:
+      type: object
+      properties:
+        uploadUrl:
+          type: string
+          format: uri
+          description: R2 への期限付き PUT URL
+        jacketUrl:
+          type: string
+          format: uri
+          description: 楽曲に設定する公開 URL
+      required:
+        - uploadUrl
+        - jacketUrl
     musicData:
       type: object
       properties:

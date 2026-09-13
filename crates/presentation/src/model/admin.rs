@@ -57,6 +57,20 @@ pub struct UpdateMusicRequest {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct JacketUploadRequest {
+    pub music_id: Option<String>,
+    pub content_type: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JacketUploadResponse {
+    pub upload_url: String,
+    pub jacket_url: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SheetDataRequest {
     pub difficulty: String,
     pub level: f64,

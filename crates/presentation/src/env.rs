@@ -44,3 +44,23 @@ pub fn postgres_url() -> String {
     let port = postgres_port();
     format!("postgres://{}:{}@{}:{}/{}", user, password, host, port, db)
 }
+
+pub fn r2_endpoint() -> String {
+    env::var("R2_ENDPOINT").expect("R2_ENDPOINT must be set")
+}
+
+pub fn r2_bucket() -> String {
+    env::var("R2_BUCKET").expect("R2_BUCKET must be set")
+}
+
+pub fn r2_access_key_id() -> String {
+    env::var("R2_ACCESS_KEY_ID").expect("R2_ACCESS_KEY_ID must be set")
+}
+
+pub fn r2_secret_access_key() -> String {
+    env::var("R2_SECRET_ACCESS_KEY").expect("R2_SECRET_ACCESS_KEY must be set")
+}
+
+pub fn r2_public_base_url() -> String {
+    env::var("R2_PUBLIC_BASE_URL").expect("R2_PUBLIC_BASE_URL must be set")
+}

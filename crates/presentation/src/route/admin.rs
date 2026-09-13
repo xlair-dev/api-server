@@ -13,8 +13,8 @@ use crate::{
     error::AppError,
     model::{
         admin::{
-            CreateMusicRequest, DbSynchronizationResponse, MusicListQuery, MusicListResponse,
-            UpdateMusicRequest,
+            CreateMusicRequest, DbSynchronizationResponse, JacketUploadRequest,
+            JacketUploadResponse, MusicListQuery, MusicListResponse, UpdateMusicRequest,
         },
         sync::SyncItemResponse,
     },
@@ -22,6 +22,7 @@ use crate::{
 
 const DEFAULT_PAGE_LIMIT: u64 = 50;
 const MAX_PAGE_LIMIT: u64 = 100;
+const ALLOWED_JACKET_CONTENT_TYPES: [&str; 3] = ["image/jpeg", "image/png", "image/webp"];
 
 #[derive(Deserialize, Serialize)]
 struct CursorPayload {
@@ -78,6 +79,47 @@ pub async fn handle_update_music(
         .update(music_id, request.try_into()?)
         .await?;
     Ok(Json(SyncItemResponse::from(music)))
+}
+
+pub async fn handle_create_jacket_upload_url(
+    State(state): State<crate::state::State>,
+    axum::Json(request): axum::Json<JacketUploadRequest>,
+) -> Result<axum::Json<JacketUploadResponse>, AppError> {
+    let music_id = request
+        .music_id
+        .map(|value| {
+            uuid::Uuid::parse_str(&value)
+                .map(|_| value)
+                .map_err(|_| AppError::bad_request("musicId is invalid"))
+        })
+        .transpose()?
+        .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    if !ALLOWED_JACKET_CONTENT_TYPES.contains(&request.content_type.as_str()) {
+        return Err(AppError::bad_request(
+            "contentType must be image/jpeg, image/png, or image/webp",
+        ));
+    }
+    let storage = state.jacket_storage.as_ref().ok_or_else(|| {
+        AppError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "jacket storage is not configured".to_owned(),
+        )
+    })?;
+    let extension = match request.content_type.as_str() {
+        "image/jpeg" => "jpg",
+        "image/png" => "png",
+        "image/webp" => "webp",
+        _ => unreachable!(),
+    };
+    let key = format!("jackets/{music_id}.{extension}");
+    let (upload_url, jacket_url) = storage
+        .create_upload_url(&key, &request.content_type)
+        .await
+        .map_err(|error| AppError::new(StatusCode::INTERNAL_SERVER_ERROR, error.to_string()))?;
+    Ok(axum::Json(JacketUploadResponse {
+        upload_url,
+        jacket_url,
+    }))
 }
 
 fn encode_cursor(cursor: MusicListCursor) -> Result<String, AppError> {
